@@ -1,5 +1,6 @@
 package com.gestioncitas.app.dao;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -42,5 +43,37 @@ public class PacienteDao {
         }
         c.close();
         return paciente;
+    }
+
+    /**
+     * Registra un nuevo paciente. Devuelve el paciente creado con su id,
+     * o null si el usuario ya existe (columna UNIQUE de la tabla pacientes).
+     * La contraseña se guarda hasheada ("sal:hash").
+     */
+    public Paciente registrarPaciente(String nombre, String usuario, String password) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+
+        // Verificar usuario duplicado antes de insertar
+        Cursor c = db.query(DatabaseHelper.TABLE_PACIENTES,
+                new String[]{DatabaseHelper.COL_ID},
+                DatabaseHelper.COL_USUARIO + "=?",
+                new String[]{usuario},
+                null, null, null);
+        boolean existe = c.moveToFirst();
+        c.close();
+        if (existe) {
+            return null;
+        }
+
+        ContentValues valores = new ContentValues();
+        valores.put(DatabaseHelper.COL_NOMBRE, nombre);
+        valores.put(DatabaseHelper.COL_USUARIO, usuario);
+        valores.put(DatabaseHelper.COL_PASSWORD, PasswordUtil.hash(password));
+
+        long nuevoId = db.insert(DatabaseHelper.TABLE_PACIENTES, null, valores);
+        if (nuevoId == -1) {
+            return null;
+        }
+        return new Paciente((int) nuevoId, nombre, usuario, null);
     }
 }

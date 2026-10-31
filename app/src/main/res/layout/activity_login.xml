@@ -64,6 +64,17 @@
         android:textSize="16sp" />
 
     <TextView
+        android:id="@+id/linkRegistro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/login_link_registro"
+        android:textColor="@color/primary"
+        android:textSize="14sp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
         android:id="@+id/textoError"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

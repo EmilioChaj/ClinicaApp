@@ -48,6 +48,14 @@ public class LoginActivity extends AppCompatActivity {
                 intentarLogin();
             }
         });
+
+        TextView linkRegistro = findViewById(R.id.linkRegistro);
+        linkRegistro.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, RegistroActivity.class));
+            }
+        });
     }
 
     private void intentarLogin() {

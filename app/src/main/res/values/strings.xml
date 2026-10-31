@@ -8,6 +8,18 @@
     <string name="login_boton">Ingresar</string>
     <string name="login_campos_vacios">Ingrese usuario y contraseña</string>
     <string name="login_credenciales_incorrectas">Usuario o contraseña incorrectos</string>
+    <string name="login_link_registro">¿No tienes cuenta? Crear cuenta</string>
+
+    <!-- Registro -->
+    <string name="registro_title">Crear cuenta</string>
+    <string name="registro_nombre">Nombre completo</string>
+    <string name="registro_confirmar_password">Confirmar contraseña</string>
+    <string name="registro_boton">Crear cuenta</string>
+    <string name="registro_link_login">¿Ya tienes cuenta? Iniciar sesión</string>
+    <string name="registro_campos_vacios">Complete todos los campos</string>
+    <string name="registro_passwords_no_coinciden">Las contraseñas no coinciden</string>
+    <string name="registro_password_corta">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="registro_usuario_existe">Ese usuario ya existe, elija otro</string>
 
     <!-- Médicos -->
     <string name="medicos_title">Médicos disponibles</string>

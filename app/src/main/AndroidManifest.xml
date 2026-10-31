@@ -25,6 +25,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".ui.RegistroActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".ui.DisponibilidadActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
