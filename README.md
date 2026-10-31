@@ -12,24 +12,6 @@ App Android nativa para gestionar citas médicas. Permite a los pacientes regist
 - **Sesión persistente** mediante `SharedPreferences`.
 - **Base de datos local SQLite** con tablas de pacientes, médicos, horarios de atención y citas.
 
-## Capturas de pantalla
-
-> Agrega aquí imágenes de las pantallas principales (login, registro, médicos, disponibilidad, mis citas).
-
-```
-| Login | Registro |
-|-------|----------|
-|       |          |
-
-| Médicos | Disponibilidad |
-|---------|----------------|
-|         |                |
-
-| Mis Citas |
-|-----------|
-|           |
-```
-
 ## Tecnologías
 
 - **Lenguaje:** Java 17
