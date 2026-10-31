@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">Gestión de Citas</string>
+
+    <!-- Login -->
+    <string name="login_title">Inicio de sesión</string>
+    <string name="login_usuario">Usuario</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_boton">Ingresar</string>
+    <string name="login_campos_vacios">Ingrese usuario y contraseña</string>
+    <string name="login_credenciales_incorrectas">Usuario o contraseña incorrectos</string>
+
+    <!-- Médicos -->
+    <string name="medicos_title">Médicos disponibles</string>
+    <string name="medicos_hint">Seleccione un médico para programar su cita</string>
+    <string name="medicos_vacio">No hay médicos registrados</string>
+    <string name="menu_mis_citas">Mis citas</string>
+    <string name="menu_cerrar_sesion">Cerrar sesión</string>
+    <string name="sesion_cerrada">Sesión cerrada correctamente</string>
+
+    <!-- Disponibilidad -->
+    <string name="disponibilidad_title">Disponibilidad</string>
+    <string name="disponibilidad_sin_slots">No hay horarios disponibles para este médico</string>
+    <string name="slot_ocupado">Ocupado</string>
+    <string name="slot_disponible">Disponible</string>
+
+    <!-- Programar cita -->
+    <string name="programar_title">Programar cita</string>
+    <string name="programar_motivo">Motivo de la cita</string>
+    <string name="programar_hint_motivo">Describa brevemente el motivo…</string>
+    <string name="programar_boton">Confirmar cita</string>
+    <string name="programar_cancelar">Cancelar</string>
+    <string name="programar_motivo_vacio">Escriba el motivo de la cita</string>
+    <string name="programar_exito">Cita programada correctamente</string>
+    <string name="programar_error_ocupado">Ese horario acaba de ser ocupado, seleccione otro</string>
+
+    <!-- Mis citas -->
+    <string name="mis_citas_title">Mis citas</string>
+    <string name="mis_citas_proximas">Próximas</string>
+    <string name="mis_citas_historial">Historial</string>
+    <string name="mis_citas_vacio">No tiene citas registradas</string>
+    <string name="estado_programada">Programada</string>
+    <string name="estado_cancelada">Cancelada</string>
+    <string name="cancelar_cita">Cancelar cita</string>
+    <string name="cancelar_confirmacion">¿Desea cancelar esta cita?</string>
+    <string name="cancelar_si">Sí, cancelar</string>
+    <string name="cancelar_no">No</string>
+    <string name="cancelar_exito">Cita cancelada. El horario quedó libre</string>
+    <string name="cancelar_solo_futuras">Solo puede cancelar citas futuras</string>
+
+    <!-- Generales -->
+    <string name="especialidad">Especialidad</string>
+    <string name="fecha">Fecha</string>
+    <string name="hora">Hora</string>
+    <string name="estado">Estado</string>
+    <string name="motivo">Motivo</string>
+    <string name="volver">Volver</string>
+</resources>
