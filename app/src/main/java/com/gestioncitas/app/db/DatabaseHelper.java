@@ -1,17 +1,25 @@
 package com.gestioncitas.app.db;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.gestioncitas.app.util.PasswordUtil;
 
 /**
  * Administrador de la base de datos SQLite local de la aplicación.
  * Crea las tablas y siembra los datos iniciales de ejemplo (pacientes, médicos y horarios).
+ *
+ * Versiones:
+ * v1 — esquema inicial.
+ * v2 — contraseñas almacenadas con SHA-256 + sal ("sal:hash"); migración sin borrar datos.
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "gestion_citas.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Tablas
     public static final String TABLE_PACIENTES = "pacientes";
@@ -62,6 +70,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_NOMBRE + " TEXT NOT NULL, " +
                 COL_USUARIO + " TEXT NOT NULL UNIQUE, " +
+                // Desde v2 guarda "sal:hash" (SHA-256 + sal), no el texto plano
                 COL_PASSWORD + " TEXT NOT NULL)");
 
         db.execSQL("CREATE TABLE " + TABLE_MEDICOS + " (" +
@@ -97,19 +106,44 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CITAS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HORARIOS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_MEDICOS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PACIENTES);
-        onCreate(db);
+        // Migración incremental: nunca se borran tablas ni datos.
+        // Cada versión nueva añade su paso aquí (ej: if (oldVersion < 3) { ... }).
+        if (oldVersion < 2) {
+            migrarPasswordsAHash(db);
+        }
+    }
+
+    /**
+     * v1 → v2: convierte las contraseñas en texto plano a "sal:hash".
+     * No toca citas, médicos ni horarios; solo transforma el campo password.
+     */
+    private void migrarPasswordsAHash(SQLiteDatabase db) {
+        Cursor c = db.query(TABLE_PACIENTES,
+                new String[]{COL_ID, COL_PASSWORD},
+                null, null, null, null, null);
+        try {
+            while (c.moveToNext()) {
+                String id = String.valueOf(c.getInt(c.getColumnIndexOrThrow(COL_ID)));
+                String valor = c.getString(c.getColumnIndexOrThrow(COL_PASSWORD));
+                if (!PasswordUtil.esHash(valor)) { // aún en texto plano
+                    ContentValues cv = new ContentValues();
+                    cv.put(COL_PASSWORD, PasswordUtil.hash(valor));
+                    db.update(TABLE_PACIENTES, cv, COL_ID + "=?", new String[]{id});
+                }
+            }
+        } finally {
+            c.close();
+        }
     }
 
     /** Inserta los datos de ejemplo: pacientes, médicos y horarios de atención. */
     private void seed(SQLiteDatabase db) {
-        // --- Pacientes de prueba ---
+        // --- Pacientes de prueba (contraseña "1234" almacenada hasheada con sal) ---
+        String hashMaria = PasswordUtil.hash("1234");
+        String hashJuan = PasswordUtil.hash("1234");
         db.execSQL("INSERT INTO " + TABLE_PACIENTES + " (" + COL_NOMBRE + "," + COL_USUARIO + "," + COL_PASSWORD + ") VALUES " +
-                "('María García','maria','1234'), " +
-                "('Juan Pérez','juan','1234')");
+                "('María García','maria','" + hashMaria + "'), " +
+                "('Juan Pérez','juan','" + hashJuan + "')");
 
         // --- Médicos de ejemplo ---
         db.execSQL("INSERT INTO " + TABLE_MEDICOS + " (" + COL_NOMBRE + "," + COL_ESPECIALIDAD + ") VALUES " +
