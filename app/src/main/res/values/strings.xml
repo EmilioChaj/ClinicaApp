@@ -22,6 +22,7 @@
     <string name="disponibilidad_sin_slots">No hay horarios disponibles para este médico</string>
     <string name="slot_ocupado">Ocupado</string>
     <string name="slot_disponible">Disponible</string>
+    <string name="slot_ocupado_tocado">Este horario ya está ocupado, seleccione otro</string>
 
     <!-- Programar cita -->
     <string name="programar_title">Programar cita</string>
@@ -30,7 +31,9 @@
     <string name="programar_boton">Confirmar cita</string>
     <string name="programar_cancelar">Cancelar</string>
     <string name="programar_motivo_vacio">Escriba el motivo de la cita</string>
-    <string name="programar_exito">Cita programada correctamente</string>
+    <string name="programar_horario_pasado">Ese horario ya pasó, seleccione otro</string>
+    <string name="programar_exito_titulo">Cita confirmada</string>
+    <string name="programar_exito_detalle">Médico: %1$s\nFecha: %2$s\nHora: %3$s\nMotivo: %4$s</string>
     <string name="programar_error_ocupado">Ese horario acaba de ser ocupado, seleccione otro</string>
 
     <!-- Mis citas -->
@@ -53,5 +56,6 @@
     <string name="hora">Hora</string>
     <string name="estado">Estado</string>
     <string name="motivo">Motivo</string>
+    <string name="aceptar">Aceptar</string>
     <string name="volver">Volver</string>
 </resources>

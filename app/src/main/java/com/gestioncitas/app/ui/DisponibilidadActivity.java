@@ -2,7 +2,6 @@ package com.gestioncitas.app.ui;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -39,6 +38,7 @@ public class DisponibilidadActivity extends AppCompatActivity {
 
     private static final int DIAS_A_MOSTRAR = 14;
     private static final int DURACION_CITA_MIN = 60;
+    private static final DateTimeFormatter HORA_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     private HorarioDao horarioDao;
     private CitaDao citaDao;
@@ -95,7 +95,7 @@ public class DisponibilidadActivity extends AppCompatActivity {
                 Slot slot = slotsDeFecha.get(position);
                 if (slot.isOcupado()) {
                     Toast.makeText(DisponibilidadActivity.this,
-                            R.string.programar_error_ocupado, Toast.LENGTH_SHORT).show();
+                            R.string.slot_ocupado_tocado, Toast.LENGTH_SHORT).show();
                 } else {
                     mostrarDialogoMotivo(slot);
                 }
@@ -103,17 +103,31 @@ public class DisponibilidadActivity extends AppCompatActivity {
         });
     }
 
-    /** Genera la lista de fechas con al menos un horario de atención en los próximos días. */
+    /** Genera la lista de fechas que aún tienen al menos un horario sin pasar, en los próximos días. */
     private void calcularFechasDisponibles() {
         fechasDisponibles.clear();
         LocalDate hoy = LocalDate.now();
         for (int i = 0; i < DIAS_A_MOSTRAR; i++) {
             LocalDate fecha = hoy.plusDays(i);
-            int diaSemana = fecha.getDayOfWeek().getValue(); // 1 = lunes
-            List<HorarioAtencion> bloques = horarioDao.obtenerPorMedicoYDia(medicoId, diaSemana);
-            if (!bloques.isEmpty()) {
+            boolean hayHorarioFuturo = false;
+            for (LocalTime hora : horasDelDia(fecha)) {
+                if (!esPasado(fecha, hora)) {
+                    hayHorarioFuturo = true;
+                    break;
+                }
+            }
+            if (hayHorarioFuturo) {
                 fechasDisponibles.add(fecha);
             }
+        }
+        if (fechasDisponibles.isEmpty()) {
+            textoVacio.setVisibility(View.VISIBLE);
+            listaSlots.setVisibility(View.GONE);
+            spinnerFechas.setVisibility(View.GONE);
+        } else {
+            textoVacio.setVisibility(View.GONE);
+            listaSlots.setVisibility(View.VISIBLE);
+            spinnerFechas.setVisibility(View.VISIBLE);
         }
     }
 
@@ -145,32 +159,18 @@ public class DisponibilidadActivity extends AppCompatActivity {
         });
     }
 
-    /** Genera los slots de 60 min de una fecha y marca los ocupados. */
+    /** Genera los slots de 60 min de una fecha y marca los ocupados y los pasados. */
     private void cargarSlots(LocalDate fecha) {
         slotsDeFecha.clear();
-        int diaSemana = fecha.getDayOfWeek().getValue();
-        List<HorarioAtencion> bloques = horarioDao.obtenerPorMedicoYDia(medicoId, diaSemana);
+        String fechaTexto = fecha.toString();
 
-        LocalDate hoy = LocalDate.now();
-        LocalTime ahora = LocalTime.now();
-        boolean esHoy = fecha.equals(hoy);
-
-        DateTimeFormatter horaFmt = DateTimeFormatter.ofPattern("HH:mm");
-
-        for (HorarioAtencion bloque : bloques) {
-            LocalTime inicio = LocalTime.parse(bloque.getHoraInicio(), horaFmt);
-            LocalTime fin = LocalTime.parse(bloque.getHoraFin(), horaFmt);
-            LocalTime actual = inicio;
-            while (!actual.plusMinutes(DURACION_CITA_MIN).isAfter(fin)) {
-                // No mostrar horarios pasados
-                boolean pasado = esHoy && actual.isBefore(ahora);
-                if (!pasado) {
-                    String horaTexto = actual.format(horaFmt);
-                    boolean ocupado = citaDao.horarioOcupado(medicoId, fecha.toString(), horaTexto);
-                    slotsDeFecha.add(new Slot(fecha.toString(), horaTexto, ocupado));
-                }
-                actual = actual.plusMinutes(DURACION_CITA_MIN);
+        for (LocalTime hora : horasDelDia(fecha)) {
+            if (esPasado(fecha, hora)) {
+                continue; // No mostrar horarios pasados
             }
+            String horaTexto = hora.format(HORA_FMT);
+            boolean ocupado = citaDao.horarioOcupado(medicoId, fechaTexto, horaTexto);
+            slotsDeFecha.add(new Slot(fechaTexto, horaTexto, ocupado));
         }
 
         slotAdapter.notifyDataSetChanged();
@@ -184,10 +184,34 @@ public class DisponibilidadActivity extends AppCompatActivity {
         }
     }
 
+    /** Devuelve las horas de inicio de cita (en bloques de 60 min) del horario de atención de ese día. */
+    private List<LocalTime> horasDelDia(LocalDate fecha) {
+        List<LocalTime> horas = new ArrayList<>();
+        int diaSemana = fecha.getDayOfWeek().getValue(); // 1 = lunes
+        for (HorarioAtencion bloque : horarioDao.obtenerPorMedicoYDia(medicoId, diaSemana)) {
+            LocalTime actual = LocalTime.parse(bloque.getHoraInicio(), HORA_FMT);
+            LocalTime fin = LocalTime.parse(bloque.getHoraFin(), HORA_FMT);
+            while (!actual.plusMinutes(DURACION_CITA_MIN).isAfter(fin)) {
+                horas.add(actual);
+                actual = actual.plusMinutes(DURACION_CITA_MIN);
+            }
+        }
+        return horas;
+    }
+
+    /** Indica si una fecha y hora ya quedaron en el pasado (no se pueden reservar). */
+    private boolean esPasado(LocalDate fecha, LocalTime hora) {
+        if (fecha.isBefore(LocalDate.now())) {
+            return true;
+        }
+        if (fecha.isAfter(LocalDate.now())) {
+            return false;
+        }
+        return hora.isBefore(LocalTime.now());
+    }
+
     /** Diálogo para ingresar el motivo y confirmar la cita. */
     private void mostrarDialogoMotivo(final Slot slot) {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View vista = inflater.inflate(android.R.layout.simple_list_item_1, null);
         final EditText editMotivo = new EditText(this);
         editMotivo.setHint(R.string.programar_hint_motivo);
         editMotivo.setSingleLine(false);
@@ -206,6 +230,17 @@ public class DisponibilidadActivity extends AppCompatActivity {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Corrección 1: revalidar que el horario no haya quedado en el pasado
+                // mientras el diálogo permanecía abierto (regla: no se reservan horarios pasados).
+                if (esPasado(LocalDate.parse(slot.getFecha()),
+                        LocalTime.parse(slot.getHora(), HORA_FMT))) {
+                    dialog.dismiss();
+                    Toast.makeText(DisponibilidadActivity.this,
+                            R.string.programar_horario_pasado, Toast.LENGTH_LONG).show();
+                    cargarSlots(LocalDate.parse(slot.getFecha()));
+                    return;
+                }
+
                 String motivo = editMotivo.getText().toString().trim();
                 if (motivo.isEmpty()) {
                     Toast.makeText(DisponibilidadActivity.this,
@@ -214,9 +249,8 @@ public class DisponibilidadActivity extends AppCompatActivity {
                 }
                 if (guardarCita(slot, motivo)) {
                     dialog.dismiss();
-                    Toast.makeText(DisponibilidadActivity.this,
-                            R.string.programar_exito, Toast.LENGTH_LONG).show();
                     cargarSlots(LocalDate.parse(slot.getFecha()));
+                    mostrarConfirmacion(slot, motivo);
                 } else {
                     Toast.makeText(DisponibilidadActivity.this,
                             R.string.programar_error_ocupado, Toast.LENGTH_LONG).show();
@@ -224,6 +258,17 @@ public class DisponibilidadActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /** Muestra un diálogo de confirmación con los datos de la cita guardada. */
+    private void mostrarConfirmacion(Slot slot, String motivo) {
+        String detalle = getString(R.string.programar_exito_detalle,
+                medicoNombre, slot.getFecha(), slot.getHora(), motivo);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.programar_exito_titulo)
+                .setMessage(detalle)
+                .setPositiveButton(R.string.aceptar, null)
+                .show();
     }
 
     /** Guarda la cita en SQLite revalidando que el horario siga libre. */
